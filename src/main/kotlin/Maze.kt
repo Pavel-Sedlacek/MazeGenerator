@@ -2,10 +2,12 @@ import java.io.File
 import java.lang.StrictMath.pow
 import kotlin.math.sqrt
 
-class Maze {
+class Maze(private val shader: Shaders) {
 
     private val rectangles = mutableListOf<Rectangle>()
     var increment: Float = 0f
+
+    lateinit var field: MutableList<MutableList<Boolean>>
 
     private var point = mutableListOf(
         0f, 0f
@@ -18,21 +20,16 @@ class Maze {
         }
     }
 
-    fun render() {
-        for (r: Rectangle in rectangles) {
-            r.render()
-        }
-    }
-
     private fun loadMaze(path: String) {
-        val shader = Shaders()
-        shader.init(Shaders.loadShader(Shaders.vertexShader), Shaders.loadShader(Shaders.fragmentShader))
+
         val file = File(path).useLines { it.toList() }
+        field = MutableList(file.size) { MutableList(file[0].length) { false } }
         increment = 2.0f / file.size
         var xCurP = -1f
         var yCurP = 1f
         for (j in file.indices) {
             for (i in file.indices) {
+                field[i][j] = file[i][j] == '1'
                 rectangles.add(
                     Rectangle(
                         floatArrayOf(
@@ -56,16 +53,10 @@ class Maze {
         }
     }
 
-    fun updateColor() {
+    fun gameLoop() {
         for (r: Rectangle in rectangles) {
-            r.updateColor(point)
+            r.updateColor(point[0], point[1])
+            r.render()
         }
     }
-
-    fun update() {
-        updateColor()
-    }
-
-    private fun distancefromPoint(xCurP: Float, yCurP: Float): Float =
-        sqrt((pow((point[0] - xCurP).toDouble(), 2.0)) + (pow((point[1] - yCurP).toDouble(), 2.0))).toFloat()
 }
